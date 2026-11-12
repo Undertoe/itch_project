@@ -35,6 +35,7 @@ RUN if [ -f /etc/dpkg/dpkg.cfg.d/excludes ]; then \
         manpages \
         manpages-dev \
         ninja-build \
+        openssh-client \
         nodejs \
         npm \
         pkg-config \
