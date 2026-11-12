@@ -1,0 +1,27 @@
+itch_add_subprojects()
+
+# Aggregate target: `cmake --build <dir> --target itch_exec` (or `make exec`)
+# builds every executable defined under exec/, at any depth.
+function(itch_collect_executables dir out_var)
+    set(_result)
+    get_property(_targets DIRECTORY "${dir}" PROPERTY BUILDSYSTEM_TARGETS)
+    foreach(_t IN LISTS _targets)
+        get_target_property(_type ${_t} TYPE)
+        if(_type STREQUAL "EXECUTABLE")
+            list(APPEND _result ${_t})
+        endif()
+    endforeach()
+    get_property(_subdirs DIRECTORY "${dir}" PROPERTY SUBDIRECTORIES)
+    foreach(_sub IN LISTS _subdirs)
+        itch_collect_executables("${_sub}" _sub_result)
+        list(APPEND _result ${_sub_result})
+    endforeach()
+    set(${out_var} ${_result} PARENT_SCOPE)
+endfunction()
+
+itch_collect_executables("${CMAKE_CURRENT_SOURCE_DIR}" ITCH_EXEC_TARGETS)
+
+add_custom_target(itch_exec)
+if(ITCH_EXEC_TARGETS)
+    add_dependencies(itch_exec ${ITCH_EXEC_TARGETS})
+endif()

@@ -1,0 +1,54 @@
+#!/usr/bin/env sh
+set -eu
+
+mkdir -p /home/vscode/.claude
+
+VSCODE_SERVER_SETTINGS_SOURCE=/workspace/nasdaq_itch/.devcontainer/vscode-server-settings.json
+VSCODE_SERVER_SETTINGS_TARGET=/home/vscode/.vscode-server/data/Machine/settings.json
+
+if [ -f "$VSCODE_SERVER_SETTINGS_SOURCE" ]; then
+    mkdir -p "$(dirname "$VSCODE_SERVER_SETTINGS_TARGET")"
+    cp "$VSCODE_SERVER_SETTINGS_SOURCE" "$VSCODE_SERVER_SETTINGS_TARGET"
+fi
+
+# Copy user-level Claude config from the host. Host history, sessions, and
+# project state are intentionally not copied.
+for f in settings.json CLAUDE.md; do
+    if [ -f "/host-claude/$f" ]; then
+        cp "/host-claude/$f" "/home/vscode/.claude/$f"
+    fi
+done
+
+for d in agents commands skills; do
+    if [ -d "/host-claude/$d" ]; then
+        rm -rf "/home/vscode/.claude/$d"
+        cp -R "/host-claude/$d" "/home/vscode/.claude/$d"
+    fi
+done
+
+# Linux/Windows hosts store Claude credentials in this file; macOS hosts use the
+# Keychain, so log in inside the container or set CLAUDE_CODE_OAUTH_TOKEN.
+# Never overwrite a login made inside the container.
+if [ -f /host-claude/.credentials.json ] && [ ! -f /home/vscode/.claude/.credentials.json ]; then
+    cp /host-claude/.credentials.json /home/vscode/.claude/.credentials.json
+    chmod 600 /home/vscode/.claude/.credentials.json
+fi
+
+# Skip first-run onboarding prompts in a fresh container.
+if [ ! -e /home/vscode/.claude.json ]; then
+    printf '{"hasCompletedOnboarding": true}\n' > /home/vscode/.claude.json
+fi
+
+if [ -f /host-user-home/.AGENTS.md ]; then
+    cp /host-user-home/.AGENTS.md /home/vscode/AGENTS.md
+elif [ -f /host-user-home/AGENTS.md ]; then
+    cp /host-user-home/AGENTS.md /home/vscode/AGENTS.md
+elif [ ! -e /home/vscode/AGENTS.md ]; then
+    cat > /home/vscode/AGENTS.md <<'EOF'
+# Empty fallback AGENTS.md
+
+Set HOST_USER_HOME in .devcontainer/.env to import your host user AGENTS file.
+EOF
+fi
+
+exec "$@"

@@ -1,0 +1,26 @@
+# Build output
+build/
+build-*/
+build_*/
+out/
+samples/
+errors/
+*.log
+.devcontainer/.env
+
+# CMake user/local files
+CMakeUserPresets.json
+CMakeCache.txt
+CMakeFiles/
+cmake-build-*/
+
+# Editors and OS noise
+.cache/
+.vs/
+.vscode/
+.DS_Store
+Thumbs.db
+__pycache__/
+
+# Claude Code local settings
+.claude/settings.local.json

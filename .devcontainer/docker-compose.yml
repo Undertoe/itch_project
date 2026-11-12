@@ -1,0 +1,36 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: /usr/local/bin/devcontainer-entrypoint
+    command: sleep infinity
+    privileged: true
+    user: vscode
+    working_dir: /workspace/nasdaq_itch
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      AI_MEMORIES_DIR: /home/vscode/.ai-memories
+      ITCH_DATA_DIR: /data/itch
+    volumes:
+      - type: bind
+        source: ..
+        target: /workspace/nasdaq_itch
+      # Raw ITCH data, read-only. Defaults to <host home>/data/itch:
+      # USERPROFILE on Windows, HOME on macOS. Override with HOST_ITCH_DATA_DIR.
+      - type: bind
+        source: ${HOST_ITCH_DATA_DIR:-${USERPROFILE:-${HOME}}/data/itch}
+        target: /data/itch
+        read_only: true
+      - ${HOST_CLAUDE_HOME:-claude-home-fallback}:/host-claude:ro
+      - claude-home:/home/vscode/.claude
+      - ${HOST_USER_HOME:-user-home-fallback}:/host-user-home:ro
+      - ${HOST_AI_MEMORIES_DIR:-ai-memories-fallback}:/home/vscode/.ai-memories
+
+volumes:
+  ai-memories-fallback:
+  claude-home-fallback:
+  claude-home:
+  user-home-fallback:
