@@ -47,19 +47,53 @@ int main(int argc, char* argv[])
     std::cout << "Grabbing first packet: " << std::endl;
 
     std::span spannedData = buffer;
+    std::span<const std::byte> remainingData;
 
     {
-        const auto& [count, type, messageData] = sub_span_read(spannedData);
-        if(count == 0)
+        const auto& readInfo = sub_span_read(spannedData);
+        if(readInfo.count == 0)
         {
             std::cout << "FAILED TO PARSE" << std::endl;
             return -1;
         }
-        if(type == MessageType::SystemEvent)
+        if(readInfo.type == MessageType::SystemEvent)
         {
-            SystemMessages::SystemEventMessage msg(messageData);
+            SystemMessages::SystemEventMessage msg(readInfo.messageBytes);
             std::cout << "Message acquired:\n" << msg << std::endl;
         }
+        remainingData = readInfo.remainingBuffer;
     }
+    std::cout << "next 50 vals: " << std::endl;
+    for(int i = 0; i < 50; i ++)
+    {
+        std::cout << std::hex << (int) remainingData[i] << ',';
+    }
+    std::cout << std::endl;
+    std::cout << "Grabbing next packet" << std::endl;
+    {
+        const auto& readInfo = sub_span_read(remainingData);
+        if(readInfo.count == 0)
+        {
+            std::cout << "FAILED TO PARSE" << std::endl;
+            return -1;
+        }
+        if(readInfo.type == MessageType::StockDirectory)
+        {
+            StockMessages::StockDirectory msg(readInfo.messageBytes);
+            std::cout << "Message acquired: \n" << msg << std::endl;
+        }
+        else 
+        {
+            std::cout << "GOT DIFFERENT MESSAGE TYPE: " << static_cast<char>(readInfo.type) << std::endl;
+        }
+        remainingData = readInfo.remainingBuffer;
+    }
+    std::cout << "next 50 vals: " << std::endl;
+    for(int i = 0; i < 50; i ++)
+    {
+        std::cout << std::hex << (int) remainingData[i] << ',';
+    }
+    std::cout << std::endl;
+
     
 }

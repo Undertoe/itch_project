@@ -13,13 +13,13 @@
 #include <iomanip>
 #include <iostream>
 
-auto normalize(std::span<const std::byte> buffer) {
-    if constexpr(std::endian::native == std::endian::little)
-    {
-        return buffer | std::views::reverse | std::ranges::to<std::vector>();
-    }
-    return buffer | std::ranges::to<std::vector>();
-}
+// auto normalize(std::span<const std::byte> buffer) {
+//     if constexpr(std::endian::native == std::endian::little)
+//     {
+//         return buffer | std::views::reverse | std::ranges::to<std::vector>();
+//     }
+//     return buffer | std::ranges::to<std::vector>();
+// }
 
 
 TEST_CASE("Message test", "Verifying message type")
@@ -122,4 +122,32 @@ TEST_CASE("SystemEventMessages", "Parse")
     SystemMessages::SystemEventMessage msg2(bytes);
 
     REQUIRE(msg2 == msg);
+}
+
+TEST_CASE("StockMessages::StockDirectory", "Parse")
+{
+    StockMessages::StockDirectory msg;
+    msg.stockLocate = 1234;
+    msg.trackingNumber = 4321;
+    msg.timeStamp = std::chrono::nanoseconds{100000};
+    msg.stock = {'I', 'B', 'M'};
+    msg.marketCategory = MarketCategory::NasdaqCapitalMarket;
+    msg.statusIndicator = FinancialStatusIndicator::Normal;
+    msg.roundLotSize = 10000;
+    msg.roundLotsOnly = RoundLotsOnly::True;
+    msg.issueClassification = IssueClassification::Unavailable;
+    msg.issueSubtype = 10;
+    msg.authenticity = Authenticity::Test;
+    msg.shortSaleThreshold = ShortSaleThreshold::NotRestricted;
+    msg.ipoFlag = IPOFlag::Flase;
+    msg.luldReferencePriceTier = LULDReferencePriceTier::TierOne;
+    msg.etpFlag = ETPFlag::False;
+    msg.etpLeverageFactor = 1;
+    msg.etpInverseIndicator = ETPInverseIndicator::False;
+
+    auto bytes = msg.networkEncode();
+
+    StockMessages::StockDirectory newMessage(bytes);
+
+    REQUIRE(newMessage == msg);
 }
