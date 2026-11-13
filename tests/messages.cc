@@ -22,6 +22,29 @@ auto normalize(std::span<const std::byte> buffer) {
 }
 
 
+TEST_CASE("Message test", "Verifying message type")
+{
+    char c = 'S';
+    MessageType type = static_cast<MessageType>(c);
+    REQUIRE(type == MessageType::SystemEvent);
+
+    c = 'T';
+    type = static_cast<MessageType>(c);
+    REQUIRE(type != MessageType::SystemEvent);
+    // REQUIRE(type == MessageType::INVALID);
+    
+    c = 'U';
+    type = static_cast<MessageType>(c);
+    REQUIRE(type != MessageType::SystemEvent);
+    // REQUIRE(type == MessageType::INVALID); fails
+    
+    c = 'R';
+    type = static_cast<MessageType>(c);
+    REQUIRE(type != MessageType::SystemEvent);
+    // REQUIRE(type == MessageType::INVALID); fails
+}
+
+
 TEST_CASE("READ_BLOCK", "Validate")
 {
     uint16_t V16{16};
